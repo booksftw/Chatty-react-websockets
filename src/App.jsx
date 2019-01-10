@@ -113,53 +113,62 @@ class App extends Component {
     }
     this.addNewMessage = this.addNewMessage.bind(this)
     this.updateUserName = this.updateUserName.bind(this)
+
+    this.socket = new WebSocket("ws://localhost:3001")
+
   }
 
   updateUserName(newUserName){
-    // Step 1 Notification
-    console.log('Enter: Updating username') 
+    const oldUsername = this.state.currentUser.name
     this.setState({
-      currentUser: {name: newUserName},
+      currentUser: {name: newUserName}
     })
+
+    console.log('oldusername',oldUsername)
+    const postNotification = {type: "postNotification", content: `${oldUsername} has changed their name to ${newUserName}.`}
+
+    // SNED THE NOTIFICATION OBJECT
+      this.socket.send( JSON.stringify(postNotification) )
   }
 
   addNewMessage(msg) {
-    const socket = new WebSocket("ws://localhost:3001")
-
+    console.log('msg',msg)
     //set parent state
     const newMessagePiece = {id: uuidv1(), username: this.state.currentUser.name, content: msg}
-    const {id ,username, content } = newMessagePiece
-    
+    // const {id ,username, content } = newMessagePiece
+    const messages = this.state.messages.concat(newMessagePiece)
+    console.log('newMessagePiece', messages)
     this.setState({
-        messages: this.state.messages.concat(newMessagePiece)
+        // messages: this.state.messages.concat(newMessagePiece)
+        messages: messages
+    }, () => {
+
+      const latestMessages = this.state.messages
+      this.socket.send(JSON.stringify(latestMessages) )
+      console.log('latestMessages',latestMessages)
+
     })    
 
-    socket.onopen = () => {
-      const latestMessages = this.state.messages
-      socket.send(JSON.stringify(latestMessages) )
-    }
   }
     
     componentDidMount() {
-      const socket = new WebSocket("ws://localhost:3001")
-
-      socket.onopen = function () {
+      this.socket.onopen = function () {
         console.log('Connected to server')
       }
 
-      socket.onmessage = (latestMessages) => {
+      this.socket.onmessage = (latestMessages) => {
         console.log('received message')
         const msgParsed = JSON.parse(latestMessages.data)
-        // console.log('MSG Data Parsed', msgParsed)
+        console.log('MSG Data Parsed', msgParsed)
 
         // ? Hot fix to Direct Replace messages:[object,...] state - concat not set up for me
-        var x = []
-        var tempMessages = Object.assign(x, msgParsed) //? Ask Nima: [ object, ... ] how to replace the state, isPossible?
+        // var x = []
+        // var tempMessages = Object.assign(x, msgParsed) //? Ask Nima: [ object, ... ] how to replace the state, isPossible?
 
         this.setState({
           //messages :  this.state.messages 
-          messages :  tempMessages 
-
+          //messages :  tempMessages 
+          messages: msgParsed
         });
       }
   }

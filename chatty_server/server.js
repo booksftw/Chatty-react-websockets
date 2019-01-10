@@ -22,19 +22,15 @@ const wss = new SocketServer({ server });
 // the ws parameter in the callback.
 wss.on('connection', (ws) => {
     console.log('Client connected');
-    const intialMsg = {id: uuidv1(), username: "Bobzx", content: "Hi" }
-    ws.send(JSON.stringify(intialMsg)) // send to server 
+    // const intialMsg = {id: uuidv1(), username: "Bobzx", content: "Hi" }
+    // ws.send(JSON.stringify(intialMsg)) // send to server 
 
     ws.on("message", function incoming(data){
-        console.log('message received')
-        console.log(data)
+        console.log('JSON PARSE' , JSON.parse(data))
 
         wss.clients.forEach(function each(client) {
-            console.log('sending for each client')
-            // const test =  [{content:'test', id:'test', test:'test' , username:'test'}]
             const cleanData = JSON.parse(data)
             const stringifyData = JSON.stringify(cleanData)
-            console.log('data strigfy', stringifyData)
             client.send(stringifyData)            
         } )
     })
