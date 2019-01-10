@@ -116,9 +116,10 @@ class App extends Component {
   }
 
   updateUserName(newUserName){
-
+    // Step 1 Notification
+    console.log('Enter: Updating username') 
     this.setState({
-      currentUser: {name: newUserName}
+      currentUser: {name: newUserName},
     })
   }
 
